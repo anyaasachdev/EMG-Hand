@@ -1,0 +1,88 @@
+#include <Servo.h>  // Include Servo library
+
+// Define servo objects for each finger
+Servo thumbServo;
+Servo indexServo;
+Servo middleServo;
+Servo ringServo;
+Servo pinkyServo;
+
+// Assign servo PWM pins on Arduino
+#define THUMB_PIN 3
+#define INDEX_PIN 5
+#define MIDDLE_PIN 6
+#define RING_PIN 9
+#define PINKY_PIN 10
+
+// Define movement angles
+#define OPEN_ANGLE 0    // Fully open position
+#define CLOSE_ANGLE 90  // Fully closed (fist) position
+#define DELAY_TIME 500  // Delay between movements (in milliseconds)
+
+void setup() {
+    // Attach servos to respective pins
+    thumbServo.attach(THUMB_PIN);
+    indexServo.attach(INDEX_PIN);
+    middleServo.attach(MIDDLE_PIN);
+    ringServo.attach(RING_PIN);
+    pinkyServo.attach(PINKY_PIN);
+
+    // Set initial positions (open hand)
+    thumbServo.write(OPEN_ANGLE);
+    indexServo.write(OPEN_ANGLE);
+    middleServo.write(OPEN_ANGLE);
+    ringServo.write(OPEN_ANGLE);
+    pinkyServo.write(OPEN_ANGLE);
+
+    delay(1000);  // Wait a second before starting movements
+}
+
+void loop() {
+    // Move each finger individually
+    moveFinger(thumbServo, "Thumb");
+    moveFinger(indexServo, "Index");
+    moveFinger(middleServo, "Middle");
+    moveFinger(ringServo, "Ring");
+    moveFinger(pinkyServo, "Pinky");
+
+    // Perform full-hand curling motion
+    curlHand();
+    
+    delay(2000); // Wait before repeating
+}
+
+// Function to move a single finger
+void moveFinger(Servo &servo, String fingerName) {
+    Serial.print("Moving "); Serial.println(fingerName);
+    servo.write(CLOSE_ANGLE);  // Close finger
+    delay(DELAY_TIME);
+    servo.write(OPEN_ANGLE);   // Open finger
+    delay(DELAY_TIME);
+}
+
+// Function for full-hand curling motion
+void curlHand() {
+    Serial.println("Performing full-hand curl");
+    thumbServo.write(CLOSE_ANGLE);
+    delay(DELAY_TIME);
+    indexServo.write(CLOSE_ANGLE);
+    delay(DELAY_TIME);
+    middleServo.write(CLOSE_ANGLE);
+    delay(DELAY_TIME);
+    ringServo.write(CLOSE_ANGLE);
+    delay(DELAY_TIME);
+    pinkyServo.write(CLOSE_ANGLE);
+    
+    delay(1000);  // Hold fist for a moment
+
+    // Open all fingers back up
+    thumbServo.write(OPEN_ANGLE);
+    indexServo.write(OPEN_ANGLE);
+    middleServo.write(OPEN_ANGLE);
+    ringServo.write(OPEN_ANGLE);
+    pinkyServo.write(OPEN_ANGLE);
+
+    delay(DELAY_TIME);
+}
+
+
