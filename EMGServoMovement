@@ -1,0 +1,83 @@
+#include <Servo.h>
+
+// Define servo objects for each finger
+Servo thumb;
+Servo index;
+Servo middle;
+Servo ring;
+Servo pinky;
+
+// Define MyoWare sensor pin
+const int myoPin = A0;
+
+// Define servo pins
+const int thumbPin = 3;
+const int indexPin = 5;
+const int middlePin = 6;
+const int ringPin = 9;
+const int pinkyPin = 10;
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Attach servos to their respective pins
+  thumb.attach(thumbPin);
+  index.attach(indexPin);
+  middle.attach(middlePin);
+  ring.attach(ringPin);
+  pinky.attach(pinkyPin);
+
+  // Start with hand open
+  openHand();
+}
+
+void loop() {
+  int emgValue = analogRead(myoPin); // Read MyoWare sensor
+
+  Serial.print("EMG Value: ");
+  Serial.println(emgValue);
+
+  if (emgValue < 300) {
+    openHand();  // Fully open hand
+  } 
+  else if (emgValue >= 300 && emgValue < 600) {
+    moveFingers(); // Move fingers one by one
+  } 
+  else {
+    closeHand();  // Close all fingers
+  }
+
+  delay(50); // Small delay to stabilize
+}
+
+// Open hand (all fingers extended)
+void openHand() {
+  thumb.write(0);
+  index.write(0);
+  middle.write(0);
+  ring.write(0);
+  pinky.write(0);
+}
+
+// Move fingers one by one
+void moveFingers() {
+  thumb.write(90);
+  delay(100);
+  index.write(90);
+  delay(100);
+  middle.write(90);
+  delay(100);
+  ring.write(90);
+  delay(100);
+  pinky.write(90);
+  delay(100);
+}
+
+// Close hand (all fingers curled)
+void closeHand() {
+  thumb.write(180);
+  index.write(180);
+  middle.write(180);
+  ring.write(180);
+  pinky.write(180);
+}
