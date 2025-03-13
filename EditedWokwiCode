@@ -1,0 +1,47 @@
+#include <Servo.h>
+
+const int EMG_PIN = A0;  // MyoWare sensor input pin
+const int THRESHOLD = 350; // Minimum EMG value to trigger movement
+
+Servo servo1, servo2, servo3, servo4, servo5;
+
+void setup() {
+    servo1.attach(3);
+    servo2.attach(5);
+    servo3.attach(6);
+    servo4.attach(9);
+    servo5.attach(10);
+
+    Serial.begin(9600);
+}
+
+void loop() {
+    int emgValue = analogRead(EMG_PIN); // Read MyoWare sensor
+    
+    // Check if EMG signal is strong enough to move servos
+    if (emgValue > THRESHOLD) {
+        int mappedSignal = map(emgValue, THRESHOLD, 700, 0, 180);
+        mappedSignal = constrain(mappedSignal, 0, 180);
+
+        // Move servos gradually
+        servo1.write(mappedSignal);
+        servo2.write(mappedSignal);
+        servo3.write(mappedSignal);
+        servo4.write(mappedSignal);
+        servo5.write(mappedSignal);
+        
+        Serial.print("EMG Value: ");
+        Serial.print(emgValue);
+        Serial.print(" | Servo Angle: ");
+        Serial.println(mappedSignal);
+    } else {
+        // If below threshold, return servos to relaxed position
+        servo1.write(0);
+        servo2.write(0);
+        servo3.write(0);
+        servo4.write(0);
+        servo5.write(0);
+    }
+
+    delay(50); // Smooth control
+}
