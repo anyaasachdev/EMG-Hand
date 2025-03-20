@@ -1,0 +1,27 @@
+#include <Servo.h>
+
+Servo myServo;
+const int sensorPin = A0;
+const int servoPin = 9;
+
+int sensorValue = 0;
+const int threshold = 14;  // Baseline threshold
+const int minVal = 13;     // Resting state
+const int maxVal = 15;     // Active state
+
+void setup() {
+    myServo.attach(servoPin);
+    Serial.begin(9600);
+}
+
+void loop() {
+    sensorValue = analogRead(sensorPin);
+    Serial.println(sensorValue);  // Check readings in Serial Monitor
+
+    // Scale muscle sensor values to servo range (0° - 180°)
+    int angle = map(sensorValue, minVal, maxVal, 0, 180);
+    angle = constrain(angle, 0, 180);  // Ensure valid servo range
+
+    myServo.write(angle);
+    delay(50);  // Adjust delay for smoother movement
+}
