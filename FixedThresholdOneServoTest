@@ -1,0 +1,52 @@
+#include <Servo.h>
+
+Servo myServo;  // Create a Servo object
+const int sensorPin = A0;  // MyoWare sensor connected to analog pin
+const int servoPin = 9;    // Servo motor connected to digital pin
+
+int sensorValue = 0;
+int lastSensorValue = 0;  // Variable to store the last sensor value
+const int restingValue = 14;  // Resting value of the MyoWare sensor
+const int maxValue = 60;     // Maximum value when you squeeze your fist
+const int smoothingFactor = 5; // Number of samples to average for smoothing
+
+void setup() {
+  myServo.attach(servoPin);  // Attach the servo to the defined pin
+  Serial.begin(115200);  // Start serial communication at 115200 baud rate
+  while (!Serial); // Wait for the serial terminal to open
+  Serial.println("MyoWare Example with Servo Control and Smoothing");
+}
+
+void loop() {  
+  // Read the sensor value from MyoWare
+  int sensorValue = analogRead(sensorPin);
+
+  // Apply smoothing by averaging a number of readings
+  static int sensorHistory[smoothingFactor]; // Array to store past sensor readings
+  static int currentIndex = 0;  // Index to track where we are in the array
+
+  // Shift the previous sensor readings in the array
+  sensorHistory[currentIndex] = sensorValue;
+  currentIndex = (currentIndex + 1) % smoothingFactor;  // Loop back after reaching the end of the array
+  
+  // Calculate the average sensor value
+  int averageSensorValue = 0;
+  for (int i = 0; i < smoothingFactor; i++) {
+    averageSensorValue += sensorHistory[i];
+  }
+  averageSensorValue /= smoothingFactor;
+
+  // Print the smoothed sensor value to the Serial Monitor
+  Serial.println(averageSensorValue);
+
+  // Map the smoothed sensor value to the servo angle (0-180)
+  int mappedAngle = map(averageSensorValue, restingValue, maxValue, 0, 180);
+  
+  // Apply a dead zone: only move the servo if the value has significantly changed
+  if (abs(averageSensorValue - lastSensorValue) > 2) {  // Adjust the threshold value as needed
+    myServo.write(mappedAngle);  // Move the servo to the mapped position
+    lastSensorValue = averageSensorValue;  // Update the last sensor value
+  }
+
+  delay(50);  // Small delay to allow the servo to move smoothly
+}
