@@ -1,0 +1,58 @@
+#include <Servo.h>
+
+const int sensorPin = A0;     // MyoWare sensor connected to analog pin
+const int restingValue = 14;  // Baseline sensor value when relaxed
+const int maxValue = 60;      // Max sensor value during contraction
+const int smoothingFactor = 5; // Smoothing samples
+const int deadZone = 2;       // Threshold to ignore small changes
+
+const int servoPins[5] = {3, 5, 6, 9, 10}; // Pins for 5 servo motors
+Servo servos[5];  // Array of 5 Servo objects
+
+int sensorHistory[smoothingFactor]; // For smoothing
+int currentIndex = 0;
+int lastAverage = 0;
+
+void setup() {
+  Serial.begin(115200);
+  while (!Serial); // Wait for serial to open
+  Serial.println("MyoWare Hand Control - One Sensor, Five Servos");
+
+  // Attach all servos to their respective pins
+  for (int i = 0; i < 5; i++) {
+    servos[i].attach(servoPins[i]);
+  }
+}
+
+void loop() {
+  int sensorValue = analogRead(sensorPin);
+
+  // Store in smoothing buffer
+  sensorHistory[currentIndex] = sensorValue;
+  currentIndex = (currentIndex + 1) % smoothingFactor;
+
+  // Calculate average
+  int avg = 0;
+  for (int i = 0; i < smoothingFactor; i++) {
+    avg += sensorHistory[i];
+  }
+  avg /= smoothingFactor;
+
+  Serial.println(avg);
+
+  // Dead zone filtering
+  if (abs(avg - lastAverage) > deadZone) {
+    // Map to angle
+    int angle = map(avg, restingValue, maxValue, 0, 180);
+    angle = constrain(angle, 0, 180);
+
+    // Move all servos to that angle
+    for (int i = 0; i < 5; i++) {
+      servos[i].write(angle);
+    }
+
+    lastAverage = avg;
+  }
+
+  delay(50);
+}
