@@ -1,24 +1,27 @@
 #include <Servo.h>
 
-const int sensorPin = A0;     // MyoWare sensor connected to analog pin
-const int restingValue = 14;  // Baseline sensor value when relaxed
-const int maxValue = 60;      // Max sensor value during contraction
-const int smoothingFactor = 5; // Smoothing samples
-const int deadZone = 2;       // Threshold to ignore small changes
+const int sensorPin = A0;        // MyoWare sensor
+const int restingValue = 14;     // Relaxed muscle value
+const int maxValue = 60;         // Fully flexed muscle value
+const int smoothingFactor = 5;   // For smoothing sensor input
+const int deadZone = 2;          // To ignore small changes
 
-const int servoPins[5] = {3, 5, 6, 9, 10}; // Pins for 5 servo motors
-Servo servos[5];  // Array of 5 Servo objects
+const int servoPins[5] = {3, 5, 6, 9, 10};  // Servo pins for each finger
+Servo servos[5];
 
-int sensorHistory[smoothingFactor]; // For smoothing
+float scaleFactors[5] = {1.0, 0.9, 0.8, 0.7, 0.6}; 
+// Thumb, Index, Middle, Ring, Pinky — adjust to taste
+
+int sensorHistory[smoothingFactor];
 int currentIndex = 0;
 int lastAverage = 0;
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial); // Wait for serial to open
-  Serial.println("MyoWare Hand Control - One Sensor, Five Servos");
+  while (!Serial);
+  Serial.println("MyoWare Hand Control - Scaled Finger Motion");
 
-  // Attach all servos to their respective pins
+  // Attach each servo
   for (int i = 0; i < 5; i++) {
     servos[i].attach(servoPins[i]);
   }
@@ -26,12 +29,9 @@ void setup() {
 
 void loop() {
   int sensorValue = analogRead(sensorPin);
-
-  // Store in smoothing buffer
   sensorHistory[currentIndex] = sensorValue;
   currentIndex = (currentIndex + 1) % smoothingFactor;
 
-  // Calculate average
   int avg = 0;
   for (int i = 0; i < smoothingFactor; i++) {
     avg += sensorHistory[i];
@@ -40,15 +40,14 @@ void loop() {
 
   Serial.println(avg);
 
-  // Dead zone filtering
   if (abs(avg - lastAverage) > deadZone) {
-    // Map to angle
-    int angle = map(avg, restingValue, maxValue, 0, 180);
-    angle = constrain(angle, 0, 180);
+    int baseAngle = map(avg, restingValue, maxValue, 0, 180);
+    baseAngle = constrain(baseAngle, 0, 180);
 
-    // Move all servos to that angle
     for (int i = 0; i < 5; i++) {
-      servos[i].write(angle);
+      int fingerAngle = baseAngle * scaleFactors[i];
+      fingerAngle = constrain(fingerAngle, 0, 180);
+      servos[i].write(fingerAngle);
     }
 
     lastAverage = avg;
